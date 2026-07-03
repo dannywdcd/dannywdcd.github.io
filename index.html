@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Rulebook That Rewrites Itself</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%94%81%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink: #14140f;
+    --ink-raised: #1c1d16;
+    --paper: #ede7d8;
+    --paper-dim: #c9c3b2;
+    --signal: #d97d3d;
+    --signal-dim: #a86030;
+    --structure: #5c6f63;
+    --structure-dim: #3a453d;
+    --muted: #8b8570;
+    --hair: rgba(237,231,216,0.12);
+    --serif: 'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
+    --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono: 'IBM Plex Mono','SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:920px;margin:0 auto;padding:0 28px 120px;}
+  a{color:var(--signal);}
+  ::selection{background:var(--signal-dim);color:var(--paper);}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--structure);
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--structure);display:inline-block;}
+
+  h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:88px 0 40px;}
+  .hero h1{
+    font-size:clamp(2.3rem,5vw,3.6rem);
+    line-height:1.08;
+    margin:18px 0 22px;
+    color:var(--paper);
+  }
+  .hero h1 em{font-style:italic;color:var(--signal);}
+  .hero p.lede{
+    font-size:1.18rem;
+    max-width:62ch;
+    color:var(--paper-dim);
+    margin:0 0 8px;
+  }
+  .hero .meta{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-top:22px;
+  }
+
+  .chart-wrap{
+    margin:44px 0 8px;
+    border:1px solid var(--hair);
+    background:var(--ink-raised);
+    border-radius:4px;
+    padding:22px 22px 14px;
+  }
+  .chart-wrap canvas{display:block;width:100%;height:280px;}
+  .chart-legend{
+    display:flex;flex-wrap:wrap;gap:18px;
+    font-family:var(--mono);font-size:0.7rem;color:var(--muted);
+    padding-top:10px;border-top:1px solid var(--hair);margin-top:4px;
+    letter-spacing:0.02em;
+  }
+  .chart-legend span{display:flex;align-items:center;gap:6px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:64px 0;border-top:1px solid var(--hair);}
+  section > .eyebrow{margin-bottom:14px;}
+  section h2{font-size:1.9rem;margin-bottom:18px;}
+  section p.intro{color:var(--paper-dim);max-width:66ch;font-size:1.02rem;margin-bottom:36px;}
+
+  /* pipeline */
+  .steps{display:flex;flex-direction:column;}
+  .step{
+    display:grid;grid-template-columns:56px 1fr;gap:20px;
+    padding:20px 0;border-top:1px solid var(--hair);
+  }
+  .step:first-child{border-top:none;}
+  .step .num{
+    font-family:var(--mono);color:var(--signal);font-size:0.95rem;
+    padding-top:2px;
+  }
+  .step h3{font-size:1.08rem;color:var(--paper);margin-bottom:6px;font-family:var(--sans);font-weight:650;}
+  .step p{color:var(--paper-dim);font-size:0.96rem;max-width:60ch;margin:0;}
+  .step .tag{
+    display:inline-block;font-family:var(--mono);font-size:0.66rem;
+    letter-spacing:0.06em;text-transform:uppercase;color:var(--structure);
+    border:1px solid var(--structure-dim);padding:2px 7px;border-radius:3px;
+    margin-top:8px;
+  }
+  .loop-back{
+    margin-top:8px;padding:18px 20px;background:var(--ink-raised);
+    border-left:2px solid var(--signal);border-radius:0 4px 4px 0;
+    font-size:0.93rem;color:var(--paper-dim);
+  }
+  .loop-back b{color:var(--paper);}
+
+  /* recursive case study */
+  .case{
+    display:grid;grid-template-columns:1fr 1fr;gap:1px;
+    background:var(--hair);border:1px solid var(--hair);border-radius:4px;overflow:hidden;
+  }
+  .case > div{background:var(--ink);padding:26px 24px;}
+  .case .before{background:var(--ink);}
+  .case .after{background:var(--ink-raised);}
+  .case-label{
+    font-family:var(--mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  .case .before .case-label{color:var(--muted);}
+  .case .after .case-label{color:var(--signal);}
+  .case p{font-size:0.94rem;color:var(--paper-dim);margin:0 0 10px;}
+  .case p:last-child{margin-bottom:0;}
+  .case strong{color:var(--paper);}
+  @media(max-width:640px){.case{grid-template-columns:1fr;}}
+
+  .diagnosis{
+    margin:26px 0 0;padding:20px 22px;
+    background:var(--ink-raised);border-radius:4px;
+    font-size:0.96rem;color:var(--paper-dim);
+    border:1px dashed var(--structure-dim);
+  }
+  .diagnosis .case-label{color:var(--structure);}
+
+  /* risk table */
+  table.risk{width:100%;border-collapse:collapse;font-size:0.9rem;}
+  table.risk th{
+    text-align:left;font-family:var(--mono);font-size:0.68rem;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--muted);padding:0 14px 10px 0;font-weight:500;
+    border-bottom:1px solid var(--hair);
+  }
+  table.risk td{
+    padding:14px 14px 14px 0;border-bottom:1px solid var(--hair);
+    color:var(--paper-dim);vertical-align:top;
+  }
+  table.risk td:first-child{color:var(--paper);font-weight:600;white-space:nowrap;}
+  .pill{
+    font-family:var(--mono);font-size:0.68rem;letter-spacing:0.04em;
+    padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-block;
+  }
+  .pill.gate{background:rgba(217,125,61,0.15);color:var(--signal);}
+  .pill.spectrum{background:rgba(92,111,99,0.25);color:#a8bcae;}
+  .pill.exit{background:rgba(217,125,61,0.15);color:var(--signal);}
+  .risk-wrap{overflow-x:auto;}
+
+  /* cascade */
+  .cascade{
+    display:flex;align-items:stretch;gap:0;flex-wrap:wrap;
+    font-family:var(--mono);font-size:0.82rem;
+  }
+  .cascade .src{
+    background:var(--ink-raised);border:1px solid var(--hair);border-radius:4px;
+    padding:12px 16px;color:var(--paper-dim);min-width:120px;text-align:center;
+  }
+  .cascade .src.hit{border-color:var(--signal-dim);color:var(--paper);}
+  .cascade .arrow{display:flex;align-items:center;padding:0 10px;color:var(--structure);}
+  .cascade-note{margin-top:22px;font-size:0.95rem;color:var(--paper-dim);max-width:66ch;}
+  .cascade-note b{color:var(--paper);}
+
+  /* skills grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:4px;overflow:hidden;}
+  .grid > div{background:var(--ink);padding:24px;}
+  .grid h3{font-family:var(--sans);font-size:1rem;color:var(--paper);margin-bottom:8px;font-weight:650;}
+  .grid p{font-size:0.9rem;color:var(--paper-dim);margin:0;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+
+  footer{
+    padding-top:56px;border-top:1px solid var(--hair);
+    font-size:0.88rem;color:var(--muted);
+  }
+  footer p{max-width:60ch;margin:0 0 14px;}
+  footer a{text-decoration:underline;}
+
+  @media(prefers-reduced-motion: reduce){
+    * {animation-duration:0.001ms !important; animation-iteration-count:1 !important;}
+  }
+
+  /* ---------- TOPBAR / VIEW TOGGLE ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--ink);border-bottom:1px solid var(--hair);
+    padding:16px 0;
+  }
+  .topbar-inner{
+    max-width:920px;margin:0 auto;padding:0 28px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .brand{font-family:var(--mono);font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+  .toggle{display:inline-flex;border:1px solid var(--hair);border-radius:20px;padding:3px;background:var(--ink-raised);}
+  .toggle button{
+    font-family:var(--mono);font-size:0.74rem;letter-spacing:0.02em;
+    background:transparent;border:none;color:var(--muted);
+    padding:7px 16px;border-radius:16px;cursor:pointer;
+    transition:color .15s ease, background .15s ease;
+  }
+  .toggle button:hover{color:var(--paper-dim);}
+  .toggle button.active{background:var(--structure-dim);color:var(--paper);}
+  .toggle button:focus-visible{outline:2px solid var(--signal);outline-offset:2px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+  .view .hero{padding-top:56px;}
+
+  /* ---------- NUMBERS VIEW ---------- */
+  .stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:4px;overflow:hidden;
+  }
+  .stats > div{background:var(--ink);padding:22px 20px;}
+  .stat-value{font-family:var(--serif);font-size:1.85rem;color:var(--paper);font-variant-numeric:tabular-nums;line-height:1.1;}
+  .stat-value.neg{color:var(--signal);}
+  .stat-value.pos{color:#a8bcae;}
+  .stat-label{font-family:var(--mono);font-size:0.66rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-top:8px;}
+
+  .swing{display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;padding:12px 0 8px;}
+  .swing .num{font-family:var(--serif);font-size:2.4rem;font-variant-numeric:tabular-nums;line-height:1;}
+  .swing .num.pos{color:#a8bcae;}
+  .swing .num.neg{color:var(--signal);}
+  .swing .arrow{font-size:1.4rem;color:var(--muted);}
+  .swing-note{font-family:var(--mono);font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:10px;}
+
+  .propbar{display:flex;height:14px;border-radius:8px;overflow:hidden;margin:20px 0 12px;background:var(--ink-raised);}
+  .propbar .seg-add{background:var(--signal-dim);}
+  .propbar .seg-offset{background:var(--structure);}
+  .propbar-legend{display:flex;gap:22px;flex-wrap:wrap;font-family:var(--mono);font-size:0.72rem;color:var(--muted);}
+  .propbar-legend span{display:flex;align-items:center;gap:6px;}
+
+  .callout{
+    margin-top:26px;padding:20px 22px;
+    background:var(--ink-raised);border-left:2px solid var(--signal);border-radius:0 4px 4px 0;
+    font-size:0.95rem;color:var(--paper-dim);
+  }
+  .callout b{color:var(--paper);}
+  .callout a{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">Recursive Pairs Trading</span>
+    <div class="toggle" role="tablist" aria-label="Choose page view">
+      <button type="button" data-view="system" class="active" role="tab" aria-selected="true">The System</button>
+      <button type="button" data-view="numbers" role="tab" aria-selected="false">The Numbers</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+<div class="view active" id="view-system">
+
+  <header class="hero">
+    <div class="eyebrow">Agentic AI · Live Research System</div>
+    <h1>An agent that runs the trade, <em>grades its own thesis</em>, and rewrites the rulebook.</h1>
+    <p class="lede">This is a real statistical-arbitrage research pipeline. Daily universe scans, cointegration screens, risk gates, position sizing are operated end-to-end by Claude as the autonomous agent. It isn't a chatbot bolted onto a spreadsheet, it's a closed loop. The system trades a hypothesis, logs why every position won or lost, and periodically audits that log against its own rules. When the evidence contradicts the rulebook, the rulebook changes.</p>
+    <div class="meta">Pairs mean-reversion strategy, small/mid-cap equities · See "The Numbers" for the real seven-week trade log this pipeline produced</div>
+
+    <div class="chart-wrap">
+      <canvas id="ouChart" width="1200" height="420" aria-label="Illustrative chart of a spread z-score decaying toward zero over a half-life window, with a time-stop marker at twice the half-life"></canvas>
+      <div class="chart-legend">
+        <span><i class="dot" style="background:var(--signal)"></i> spread z-score (illustrative)</span>
+        <span><i class="dot" style="background:var(--structure)"></i> 1× / 2× half-life</span>
+        <span><i class="dot" style="background:var(--paper-dim)"></i> entry / take-profit thresholds</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="thesis">
+      <div class="eyebrow">The thesis</div>
+      <h2>A niche sized for what it actually is</h2>
+      <p class="intro">Small/mid-cap illiquid pairs sit below institutional radar and above retail noise. Too small for large funds to bother with, too slow (5–10 day holds) for retail momentum chasers. That same thinness caps how much capital the strategy can actually absorb before its own trading moves the names it depends on. The design goal was never unlimited scale; it was a dedicated book sized to the edge that actually exists.</p>
+      <div class="stats">
+        <div><div class="stat-value">$5–8M</div><div class="stat-label">Target deployable capacity, capped by small-cap liquidity</div></div>
+        <div><div class="stat-value pos">10–30%</div><div class="stat-label">Target annual return, risk-adjusted</div></div>
+        <div><div class="stat-value">1.5</div><div class="stat-label">Target Sharpe ratio</div></div>
+        <div><div class="stat-value">2.0</div><div class="stat-label">Target Sortino ratio (0% MAR)</div></div>
+      </div>
+      <p class="intro" style="margin-top:22px;margin-bottom:0;">That's the thesis this pipeline was built to pursue. Seven weeks and 35 trades isn't enough to confirm or refute a Sharpe or Sortino target; see <a href="#" data-view-link="numbers">The Numbers</a> for what actually happened over that stretch and why it doesn't settle the question either way.</p>
+    </section>
+
+    <section class="loop">
+      <div class="eyebrow">01 · The daily loop</div>
+      <h2>Seven steps, run without a human in most of them</h2>
+      <p class="intro">Each trading day the same pipeline runs autonomously. A person approves the entries and exits it recommends. Everything upstream of that decision is the agent working through tools, pulling data, screening candidates, checking its own rules, and writing down what happened.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="num">01</div>
+          <div>
+            <h3>Refresh the universe</h3>
+            <p>Nightly filter of the liquid small/mid-cap equity universe on market cap, dollar volume, and price floors. Whole sectors are excluded at this stage. Anything with binary, unhedgeable event risk never reaches the scan.</p>
+            <span class="tag">Autonomous</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">02</div>
+          <div>
+            <h3>Scan for pairs</h3>
+            <p>Cointegration test, Hurst exponent, and half-life estimate across every candidate pair in the universe. Output is a ranked list of statistically mean-reverting spreads, not a single "best" pick.</p>
+            <span class="tag">Autonomous</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">03</div>
+          <div>
+            <h3>Deep-dive check</h3>
+            <p>Rolling-window stability, hedge-ratio drift, sector-beta regression against the relevant sector ETF. Scored as a confidence spectrum, not a pass/fail. See the risk framework below for why.</p>
+            <span class="tag">Autonomous</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">04</div>
+          <div>
+            <h3>Risk gate</h3>
+            <p>Earnings and dividend check across a fallback cascade of data sources (detail below), sector concentration check, and a hard-kill screen for disguised directional bets.</p>
+            <span class="tag">Autonomous</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">05</div>
+          <div>
+            <h3>Size the trade</h3>
+            <p>Position sized off the OLS hedge ratio between the two legs, never volatility-weighted independently, which would quietly break the hedge and turn a pairs trade into two separate directional bets.</p>
+            <span class="tag">Autonomous → proposal</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">06</div>
+          <div>
+            <h3>Monitor &amp; decide</h3>
+            <p>Daily re-check of z-score, cointegration, and time held versus half-life. Recommends hold, take-profit, stop-loss, or time-stop exit. A person confirms the action.</p>
+            <span class="tag">Human confirms</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">07</div>
+          <div>
+            <h3>Log the outcome</h3>
+            <p>Every close, win, loss, or scratch, is recorded with its exit reason. This log is the raw material for step three's rules on the next cycle.</p>
+            <span class="tag">Autonomous</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="loop-back">
+        <b>The loop closes on itself.</b> Step seven's log doesn't just sit in an archive. It periodically gets read back against the rules used in steps three and four. That read-back is where this stops being a script and starts being an agent with memory. Section two below is what that looks like in practice.
+      </div>
+    </section>
+
+    <section class="recursive">
+      <div class="eyebrow">02 · The recursive part</div>
+      <h2>When the evidence contradicted the rulebook</h2>
+      <p class="intro">This is a generalized account of a real recalibration the system went through, a pattern that has repeated more than once as the strategy accumulated trades. Specific figures and dates are omitted; the structure of the correction is not.</p>
+
+      <div class="case">
+        <div class="before">
+          <div class="case-label">Original rule</div>
+          <p>Entry required a candidate pair to pass <strong>four simultaneous structural checks</strong>, long-sample cointegration, high rolling stability, tight hedge-ratio drift, and low sector-beta exposure, all at once, or the trade was rejected outright.</p>
+          <p>The checks were borrowed from a longer-horizon arbitrage playbook, multi-year structural stability as the bar for "this relationship is real."</p>
+        </div>
+        <div class="after">
+          <div class="case-label">Rewritten rule</div>
+          <p>Most checks became a <strong>graduated confidence score</strong> that sets position conviction, not a gate. Only checks that predict short-horizon risk stayed as hard kills, sector-beta exposure past a fixed threshold, extreme hedge-ratio instability, and a small set of structurally excluded sectors.</p>
+          <p>The real risk control moved to a <strong>time-based exit</strong>. Leave the trade if it hasn't converged within roughly twice its statistical half-life, regardless of how it scored at entry.</p>
+        </div>
+      </div>
+
+      <div class="diagnosis">
+        <div class="case-label">The diagnosis, in the agent's own reasoning</div>
+        Running the original four-check gate back against a batch of closed trades showed it rejecting winners at almost the same rate as losers. The check couldn't tell them apart. The mismatch was the holding period. This strategy exits in five to ten trading days, but the rejected checks were designed to certify multi-year structural stability. A pair doesn't need three years of stability to be tradable for two weeks; it needs the current regime to hold that long. Once that distinction was explicit, the fix followed directly. Keep the checks that catch a trade turning into a disguised directional bet, drop the ones measuring the wrong time horizon, and let the clock, not the entry gate, be the primary risk control.
+      </div>
+    </section>
+
+    <section class="risk">
+      <div class="eyebrow">03 · Risk framework</div>
+      <h2>Most rules are a spectrum. A few aren't.</h2>
+      <p class="intro">The recalibration above changed how most checks are treated, but a handful of conditions still end a trade outright, no matter how good the surrounding stats look.</p>
+
+      <div class="risk-wrap">
+      <table class="risk">
+        <thead>
+          <tr><th>Check</th><th>Treatment</th><th>Reasoning</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rolling stability</td>
+            <td><span class="pill spectrum">Spectrum</span></td>
+            <td>Scales conviction and position sizing rather than blocking entry. Low stability is normal for a regime-dependent, short-hold pair.</td>
+          </tr>
+          <tr>
+            <td>Hedge-ratio drift</td>
+            <td><span class="pill spectrum">Spectrum</span></td>
+            <td>Moderate drift is expected and tolerated; only extreme drift downgrades or kills a candidate.</td>
+          </tr>
+          <tr>
+            <td>Sector-beta exposure</td>
+            <td><span class="pill gate">Hard kill</span></td>
+            <td>Past a fixed ratio, the "pairs trade" is no longer market-neutral. It's a directional sector bet wearing a stats costume.</td>
+          </tr>
+          <tr>
+            <td>Sub-sector driver mismatch</td>
+            <td><span class="pill gate">Hard kill</span></td>
+            <td>Same industry label, different economics, like two REIT sub-types whose demand drivers move in opposite directions on the same rate cycle.</td>
+          </tr>
+          <tr>
+            <td>Binary event risk</td>
+            <td><span class="pill gate">Excluded upstream</span></td>
+            <td>Certain sectors are removed at the universe stage. A single overnight event can gap either leg 30–80%, which no statistical edge survives.</td>
+          </tr>
+          <tr>
+            <td>Time in trade vs. half-life</td>
+            <td><span class="pill exit">Hard exit rule</span></td>
+            <td>The one rule that never got softened. Statistical edge decays with time; holding past the time stop is exposure to sector noise, not the trade thesis.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section class="resilience">
+      <div class="eyebrow">04 · Tool orchestration</div>
+      <h2>Any one data source will eventually lie to you</h2>
+      <p class="intro">The single highest-stakes check in the whole pipeline is also the least reliable, whether either leg of a pair reports earnings before the position would exit. One bulk data source, checked once, isn't enough.</p>
+
+      <div class="cascade">
+        <div class="src hit">Bulk source A</div>
+        <div class="arrow">→</div>
+        <div class="src">Bulk source B</div>
+        <div class="arrow">→</div>
+        <div class="src">Per-ticker fallback, source A</div>
+        <div class="arrow">→</div>
+        <div class="src">Per-ticker, source C</div>
+        <div class="arrow">→</div>
+        <div class="src">Per-ticker, source D</div>
+      </div>
+
+      <p class="cascade-note"><b>This cascade exists because of a near-miss, not a design review.</b> A position was nearly held straight through an earnings print that the primary bulk source simply didn't return. The same endpoint could show a ticker clean on one call and flag it on the next. The fix wasn't "trust the API more." It was to chain five independent lookups and treat any disagreement between them as a block on the trade, not a coin flip to resolve.</p>
+    </section>
+
+    <section class="skills">
+      <div class="eyebrow">05 · What this is actually demonstrating</div>
+      <h2>Translating the trading system into agentic AI capability</h2>
+      <p class="intro">The strategy is the vehicle. The properties below are the point.</p>
+
+      <div class="grid">
+        <div>
+          <h3>Autonomous multi-step orchestration</h3>
+          <p>Seven dependent stages, data pull, screen, risk check, sizing, monitoring, logging, chained without a human authoring each individual step.</p>
+        </div>
+        <div>
+          <h3>Persistent memory, not a stateless chat</h3>
+          <p>A living rules document the agent reads at the start of every session and edits when evidence warrants it. Context that survives across days, not a conversation that resets.</p>
+        </div>
+        <div>
+          <h3>Empirical self-correction</h3>
+          <p>Rules changed because the agent's own trade log contradicted them, not because a human noticed a bug and patched it by hand.</p>
+        </div>
+        <div>
+          <h3>Risk-gated autonomy, human in the loop</h3>
+          <p>The system proposes; a person confirms every entry and exit. Autonomy scoped to analysis and monitoring, not unsupervised execution.</p>
+        </div>
+        <div>
+          <h3>Resilience across unreliable tools</h3>
+          <p>Real external data sources are inconsistent. The pipeline is built to degrade gracefully across five fallbacks rather than trust any single one.</p>
+        </div>
+        <div>
+          <h3>Judgment over hardcoding</h3>
+          <p>Most checks became graduated scores instead of pass/fail gates, closer to how a human analyst weighs conflicting evidence than to a rigid rules engine.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>This is a personal research project, built and operated with Claude (Anthropic) as the autonomous agent across the full pipeline, from data orchestration through risk analysis to trade logging. Figures on this page are illustrative; no live positions or current account holdings are shown.</p>
+    <p>Curious what actually happened when this ran? Switch to <a href="#" data-view-link="numbers">The Numbers</a> for the real seven-week trade log, and the beta bet hiding inside it.</p>
+  </footer>
+
+</div><!-- /view-system -->
+
+<div class="view" id="view-numbers">
+
+  <header class="hero">
+    <div class="eyebrow">Agentic AI · The Trade Log, Honestly</div>
+    <h1>We called it market-neutral. <em>The KRE chart says otherwise.</em></h1>
+    <p class="lede">Seven weeks of real closed trades from this pipeline. Every position was dollar-hedged with its own OLS ratio and looked, on paper, like 17 independent bets across different tickers. Strip that hedge back out at the book level and what's left lines up almost perfectly with KRE, the regional bank ETF. Most of the book's swings came from one shared factor, not seventeen independent ones.</p>
+    <div class="meta">Real closed-trade data, single research account · Historical, not a live or current position</div>
+
+    <div class="callout" style="margin-top:28px;">
+      <b>Read this as a process demonstration, not a track record.</b> 35 trades over seven weeks is not a statistically meaningful sample. It's not enough data to claim a real edge in either direction. This project demonstrates a recursive, self-correcting agentic pipeline.
+    </div>
+
+    <div class="chart-wrap">
+      <canvas id="equityChart" width="1200" height="420" aria-label="Cumulative realized profit and loss across 35 closed pairs trades, ending near breakeven after a deep mid-period drawdown"></canvas>
+      <div class="chart-legend">
+        <span><i class="dot" style="background:var(--signal)"></i> cumulative realized P&amp;L, 35 closed trades</span>
+        <span><i class="dot" style="background:var(--structure)"></i> zero line</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section>
+      <div class="eyebrow">01 · The trade log, honestly</div>
+      <h2>Majority winners. Net negative anyway.</h2>
+      <p class="intro">The per-pair signal was real often enough to win most of the time. It just didn't matter, because losses ran noticeably bigger than wins, the classic signature of a fat left tail.</p>
+      <div class="stats">
+        <div><div class="stat-value">35</div><div class="stat-label">Closed round-trips</div></div>
+        <div><div class="stat-value pos">60%</div><div class="stat-label">Win rate (21 / 14)</div></div>
+        <div><div class="stat-value pos">$479</div><div class="stat-label">Avg. winning trade</div></div>
+        <div><div class="stat-value neg">&minus;$783</div><div class="stat-label">Avg. losing trade</div></div>
+        <div><div class="stat-value neg">&minus;$904</div><div class="stat-label">Net realized P&amp;L</div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="eyebrow">02 · One day explains a lot</div>
+      <h2>KRE sold off 4%. The book gave back three weeks in an afternoon.</h2>
+      <p class="intro">No individual pair blew through its stop that day. Cointegration mostly held. The move came almost entirely from sector beta bleeding through mismatched hedges across a book concentrated in one industry. This is unrealized P&amp;L, the paper value of positions still open, marked to market. It's a different number from the realized P&amp;L above, which only counts trades that have actually been closed.</p>
+      <div class="swing">
+        <span class="num pos">+$5,234</span>
+        <span class="arrow">→</span>
+        <span class="num neg">&minus;$384</span>
+      </div>
+      <div class="swing-note">Open-book mark-to-market, single trading session, regional-bank sector selloff (KRE &minus;4%)</div>
+
+      <div class="chart-wrap" style="margin-top:24px;">
+        <canvas id="unrealizedChart" width="900" height="260" aria-label="Bar chart of unrealized mark-to-market profit and loss on the open book, dropping from plus 5,234 dollars at the start of the session to minus 384 dollars at the end"></canvas>
+        <div class="chart-legend">
+          <span><i class="dot" style="background:#a8bcae"></i> unrealized P&amp;L, start of session</span>
+          <span><i class="dot" style="background:var(--signal)"></i> unrealized P&amp;L, end of session</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="eyebrow">03 · The hidden number</div>
+      <h2>Residual beta, the exposure the hedge ratio doesn't touch</h2>
+      <p class="intro">The OLS hedge ratio neutralizes stock-A-vs-stock-B. It does nothing about stock-A-and-B-vs-the-sector. On a later snapshot of the open book, that gap added up to a real, one-directional number.</p>
+      <div class="propbar" role="img" aria-label="14 of 17 open pairs added to book KRE exposure; 3 offset it">
+        <div class="seg-add" style="width:82%"></div>
+        <div class="seg-offset" style="width:18%"></div>
+      </div>
+      <div class="propbar-legend">
+        <span><i class="dot" style="background:var(--signal-dim)"></i> 14 of 17 pairs, same-direction KRE exposure</span>
+        <span><i class="dot" style="background:var(--structure)"></i> 3 of 17, offsetting exposure</span>
+      </div>
+      <div class="stats" style="margin-top:22px;">
+        <div><div class="stat-value neg">+$1,402</div><div class="stat-label">Net book P&amp;L per 1% KRE move</div></div>
+        <div><div class="stat-value neg">&minus;$4,200</div><div class="stat-label">Est. impact, hypothetical &minus;3% KRE day</div></div>
+        <div><div class="stat-value">+0.10</div><div class="stat-label">Avg. pairwise correlation across the book</div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="eyebrow">04 · Why banks, and why that's the trap</div>
+      <h2>The best stats in the universe were also the most correlated</h2>
+      <p class="intro">Regional bank pairs consistently produced the cleanest cointegration and the most reliable reversion. The natural response was to lean into what worked. But concentrating in the sector with the best per-pair statistics is exactly how a "diversified" book of 17 tickers ends up moving like one position.</p>
+      <p class="intro" style="margin-bottom:0;">Diversification still did something real. The theoretical sum of each pair's standalone volatility was roughly $130K annualized; the realized portfolio volatility came in around $52K, a genuine ~60% reduction from holding pairs that don't move in lockstep. But +0.10 average correlation is not zero, and in a book leaning almost entirely regional-bank, it compounds into the KRE-sized number above.</p>
+    </section>
+
+    <section>
+      <div class="eyebrow">05 · The honest read</div>
+      <h2>Not a broken edge. An unpriced one.</h2>
+      <p class="intro">The idiosyncratic mean-reversion signal is real. The 60% per-pair win rate and the trades that converged on schedule show that. What wasn't real was the assumption that hedging each pair individually added up to a hedged book. It didn't, because the same sector kept supplying the best-looking trades.</p>
+      <div class="callout">
+        <b>What changed as a result.</b> The risk framework moved from managing pair count to managing net book-level residual beta. New candidates are now scored on whether they add to or offset the book's existing KRE exposure, not just on their own stats. Diversifying into uncorrelated, non-bank sectors became an explicit goal rather than a nice-to-have. That change traces directly back to <a href="#" data-view-link="system">the rule-rewrite pattern on the System page</a>. This is the evidence that drove one.
+      </div>
+    </section>
+
+    <section>
+      <div class="eyebrow">06 · What this is actually demonstrating</div>
+      <h2>Reporting the result plainly is the skill</h2>
+      <p class="intro">Not the trading performance. The diagnosis.</p>
+      <div class="grid">
+        <div>
+          <h3>Hidden factor discovery</h3>
+          <p>Computing a book-level exposure across 17 positions that no single pair's hedge ratio would ever reveal on its own.</p>
+        </div>
+        <div>
+          <h3>Signal vs. noise, separated</h3>
+          <p>Distinguishing genuine idiosyncratic reversion (real, per-pair) from correlated sector swings (the actual source of the drawdown) instead of conflating the two.</p>
+        </div>
+        <div>
+          <h3>Turning an uncomfortable result into a rule</h3>
+          <p>The residual-beta finding became a scoring input for every new trade, not a footnote explained away after the fact.</p>
+        </div>
+        <div>
+          <h3>Reporting the number, not the narrative</h3>
+          <p>Net result, roughly breakeven, slightly negative, over seven weeks. Stated plainly, with the mechanism that explains it, rather than a cherry-picked winning stretch.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Figures above are real closed-trade results from a personal research account, computed from the trade log this pipeline produced. Tickers are omitted; KRE (the regional bank ETF) is named because the exposure is the point. Historical only, not a current or live position.</p>
+    <p>Want the architecture behind this? Switch to <a href="#" data-view-link="system">The System</a>.</p>
+  </footer>
+
+</div><!-- /view-numbers -->
+</div><!-- /page -->
+
+<script>
+(function(){
+  var canvas = document.getElementById('ouChart');
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var cssW, cssH;
+
+  function layout(){
+    var rect = canvas.getBoundingClientRect();
+    cssW = rect.width; cssH = rect.height;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  var halfLife = 6.5;
+  var z0 = 2.6;
+  var days = 22;
+  var padL = 40, padR = 20, padT = 20, padB = 30;
+
+  function z(t){
+    var decay = Math.pow(0.5, t/halfLife);
+    var wiggle = 0.18 * Math.sin(t*1.4) * Math.pow(0.5, t/(halfLife*0.6));
+    return z0*decay + wiggle;
+  }
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var progress = reduceMotion ? 1 : 0;
+
+  function plot(x0,y0,w,h,fn,steps){
+    var pts = [];
+    for(var i=0;i<=steps;i++){
+      var t = days*i/steps;
+      pts.push([t, fn(t)]);
+    }
+    return pts;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,cssW,cssH);
+    var x0=padL, y0=padT, w=cssW-padL-padR, h=cssH-padT-padB;
+    var yMax=3.2, yMin=-0.6;
+
+    function X(t){ return x0 + (t/days)*w; }
+    function Y(val){ return y0 + (1-(val-yMin)/(yMax-yMin))*h; }
+
+    // grid
+    ctx.strokeStyle = 'rgba(237,231,216,0.08)';
+    ctx.lineWidth = 1;
+    for(var g=0; g<=3; g++){
+      var yy = Y(g);
+      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x0+w,yy); ctx.stroke();
+    }
+
+    // threshold lines: entry 1.75, TP 0.25
+    ctx.setLineDash([4,4]);
+    ctx.strokeStyle = 'rgba(201,195,178,0.35)';
+    ctx.beginPath(); ctx.moveTo(x0,Y(1.75)); ctx.lineTo(x0+w,Y(1.75)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0,Y(0.25)); ctx.lineTo(x0+w,Y(0.25)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(201,195,178,0.6)';
+    ctx.font = '11px IBM Plex Mono, monospace';
+    ctx.fillText('entry 1.75z', x0+w-78, Y(1.75)-6);
+    ctx.fillText('take-profit 0.25z', x0+w-108, Y(0.25)-6);
+
+    // half-life zone shading (1x to 2x HL = time-stop watch zone)
+    ctx.fillStyle = 'rgba(92,111,99,0.18)';
+    ctx.fillRect(X(halfLife), y0, X(2*halfLife)-X(halfLife), h);
+
+    // half-life markers
+    ctx.strokeStyle = 'rgba(92,111,99,0.9)';
+    ctx.setLineDash([3,3]);
+    [halfLife, 2*halfLife].forEach(function(hl, idx){
+      ctx.beginPath(); ctx.moveTo(X(hl),y0); ctx.lineTo(X(hl),y0+h); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#a8bcae';
+    ctx.fillText('1× HL', X(halfLife)+5, y0+14);
+    ctx.fillText('2× HL — time stop', X(2*halfLife)+5, y0+14);
+
+    // axis baseline
+    ctx.strokeStyle = 'rgba(237,231,216,0.2)';
+    ctx.beginPath(); ctx.moveTo(x0,y0+h); ctx.lineTo(x0+w,y0+h); ctx.stroke();
+
+    // curve
+    var steps = 200;
+    var pts = plot(x0,y0,w,h,z,steps);
+    var visibleCount = Math.max(2, Math.floor(steps*progress));
+
+    ctx.strokeStyle = '#d97d3d';
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    for(var i=0;i<=visibleCount;i++){
+      var p = pts[i];
+      var px = X(p[0]), py = Y(p[1]);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // endpoint dot
+    if(visibleCount>0){
+      var last = pts[visibleCount];
+      var lx = X(last[0]), ly = Y(last[1]);
+      var pulse = reduceMotion ? 3 : 3 + Math.sin(Date.now()/300)*1.4;
+      ctx.beginPath();
+      ctx.fillStyle = '#d97d3d';
+      ctx.arc(lx,ly,pulse,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // y label
+    ctx.fillStyle = 'rgba(201,195,178,0.5)';
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.fillText('z-score', x0-2, y0-6);
+    ctx.fillText('trading days →', x0+w-90, y0+h+22);
+  }
+
+  function loop(){
+    if(progress < 1){ progress += 0.02; draw(); requestAnimationFrame(loop); }
+    else if(!reduceMotion){ draw(); requestAnimationFrame(loop); }
+  }
+
+  function init(){ layout(); draw(); if(!reduceMotion || progress<1) requestAnimationFrame(loop); }
+
+  window.addEventListener('resize', function(){ layout(); draw(); });
+  init();
+})();
+
+(function(){
+  var canvas = document.getElementById('equityChart');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var cssW, cssH, laidOut = false;
+
+  function layout(){
+    var rect = canvas.getBoundingClientRect();
+    if(rect.width === 0) return false;
+    cssW = rect.width; cssH = rect.height;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return true;
+  }
+
+  // real cumulative realized P&L across 35 closed trades
+  var cum = [97.4,377.24,413.46,672.8,760.86,-405.14,-1002.17,-2127.37,-1832.49,-2304.77,
+             -2120.25,-2048.87,-757.4,-39.23,-1235.51,-3346.71,-2651.83,-2285.49,-1605.79,-1702.42,
+             15.67,-294.23,-521.72,-511.41,-1077.66,-1877.86,-322.82,174.56,242.86,369.48,
+             -132.95,-15.03,891.76,858.3,-903.7];
+
+  var padL = 56, padR = 20, padT = 24, padB = 30;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var progress = reduceMotion ? 1 : 0;
+
+  function draw(){
+    if(!cssW) return;
+    ctx.clearRect(0,0,cssW,cssH);
+    var x0=padL, y0=padT, w=cssW-padL-padR, h=cssH-padT-padB;
+    var yMax = 1200, yMin = -3600;
+    var n = cum.length;
+
+    function X(i){ return x0 + (i/(n-1))*w; }
+    function Y(val){ return y0 + (1-(val-yMin)/(yMax-yMin))*h; }
+
+    // grid at every $1000
+    ctx.strokeStyle = 'rgba(237,231,216,0.07)';
+    ctx.lineWidth = 1;
+    for(var g=-3000; g<=1000; g+=1000){
+      var yy = Y(g);
+      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x0+w,yy); ctx.stroke();
+      ctx.fillStyle = 'rgba(201,195,178,0.45)';
+      ctx.font = '10px IBM Plex Mono, monospace';
+      ctx.fillText((g>0?'+':'')+'$'+g, 2, yy+3);
+    }
+
+    // zero line, emphasized
+    ctx.strokeStyle = 'rgba(92,111,99,0.9)';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(x0,Y(0)); ctx.lineTo(x0+w,Y(0)); ctx.stroke();
+
+    var visibleCount = Math.max(1, Math.floor((n-1)*progress));
+
+    // area fill under curve for drawn portion
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    for(var i=0;i<=visibleCount;i++){ ctx.lineTo(X(i), Y(cum[i])); }
+    ctx.lineTo(X(visibleCount), Y(0));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(217,125,61,0.10)';
+    ctx.fill();
+
+    // curve
+    ctx.strokeStyle = '#d97d3d';
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for(var i=0;i<=visibleCount;i++){
+      var px = X(i), py = Y(cum[i]);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // endpoint dot
+    var lx = X(visibleCount), ly = Y(cum[visibleCount]);
+    var pulse = reduceMotion ? 3 : 3 + Math.sin(Date.now()/300)*1.4;
+    ctx.beginPath();
+    ctx.fillStyle = '#d97d3d';
+    ctx.arc(lx,ly,pulse,0,Math.PI*2);
+    ctx.fill();
+
+    if(progress >= 1){
+      ctx.fillStyle = '#ede7d8';
+      ctx.font = '11px IBM Plex Mono, monospace';
+      ctx.fillText('-$904 net', lx-58, ly-12);
+
+      // annotate drawdown low
+      var lowIdx = 15; // trade 16, cum -3346.71
+      var lxx = X(lowIdx), lyy = Y(cum[lowIdx]);
+      ctx.fillStyle = 'rgba(201,195,178,0.55)';
+      ctx.fillText('deepest drawdown', lxx-70, lyy-10);
+    }
+
+    ctx.fillStyle = 'rgba(201,195,178,0.5)';
+    ctx.fillText('closed trade #  →', x0+w-110, y0+h+22);
+  }
+
+  function loop(){
+    if(progress < 1){ progress += 0.018; draw(); requestAnimationFrame(loop); }
+    else if(!reduceMotion){ draw(); requestAnimationFrame(loop); }
+  }
+
+  function tryInit(){
+    if(layout()){ laidOut = true; draw(); requestAnimationFrame(loop); }
+  }
+
+  window.addEventListener('resize', function(){ if(layout()) draw(); });
+  tryInit();
+  // view may be hidden at load; re-layout when the Numbers tab becomes active
+  document.addEventListener('view:numbers-shown', function(){
+    if(!laidOut){ tryInit(); } else { layout(); draw(); }
+  });
+})();
+
+(function(){
+  var canvas = document.getElementById('unrealizedChart');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var cssW, cssH, laidOut = false;
+
+  function layout(){
+    var rect = canvas.getBoundingClientRect();
+    if(rect.width === 0) return false;
+    cssW = rect.width; cssH = rect.height;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return true;
+  }
+
+  var vals = [5234, -384];
+  var labels = ['Start of session', 'End of session'];
+  var colors = ['#a8bcae', '#d97d3d'];
+  var padL = 60, padR = 20, padT = 24, padB = 34;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var progress = reduceMotion ? 1 : 0;
+
+  function draw(){
+    if(!cssW) return;
+    ctx.clearRect(0,0,cssW,cssH);
+    var x0=padL, y0=padT, w=cssW-padL-padR, h=cssH-padT-padB;
+    var yMax = 6000, yMin = -1000;
+
+    function Y(val){ return y0 + (1-(val-yMin)/(yMax-yMin))*h; }
+
+    // gridlines every $1000
+    ctx.strokeStyle = 'rgba(237,231,216,0.07)';
+    ctx.lineWidth = 1;
+    ctx.font = '10px IBM Plex Mono, monospace';
+    for(var g=-1000; g<=6000; g+=1000){
+      var yy = Y(g);
+      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x0+w,yy); ctx.stroke();
+      ctx.fillStyle = 'rgba(201,195,178,0.45)';
+      ctx.fillText((g>0?'+':'')+'$'+g, 2, yy+3);
+    }
+
+    // zero line, emphasized
+    ctx.strokeStyle = 'rgba(92,111,99,0.9)';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(x0,Y(0)); ctx.lineTo(x0+w,Y(0)); ctx.stroke();
+
+    var n = vals.length;
+    var slot = w / n;
+    var barW = slot * 0.42;
+
+    for(var i=0;i<n;i++){
+      var cx = x0 + slot*i + slot/2;
+      var target = vals[i] * Math.min(1, progress);
+      var yTop = Y(Math.max(target,0));
+      var yBase = Y(Math.min(target,0));
+      var barH = Math.max(1, yBase - yTop);
+
+      ctx.fillStyle = colors[i];
+      ctx.fillRect(cx - barW/2, yTop, barW, barH);
+
+      if(progress >= 1){
+        ctx.fillStyle = '#ede7d8';
+        ctx.font = '13px IBM Plex Mono, monospace';
+        var label = (vals[i]>0?'+':'-') + '$' + Math.abs(vals[i]).toLocaleString();
+        var ly = vals[i] >= 0 ? Y(vals[i]) - 10 : Y(vals[i]) + 20;
+        ctx.textAlign = 'center';
+        ctx.fillText(label, cx, ly);
+
+        ctx.fillStyle = 'rgba(201,195,178,0.6)';
+        ctx.font = '10px IBM Plex Mono, monospace';
+        ctx.fillText(labels[i], cx, y0+h+20);
+        ctx.textAlign = 'left';
+      }
+    }
+  }
+
+  function loop(){
+    if(progress < 1){ progress += 0.025; draw(); requestAnimationFrame(loop); }
+  }
+
+  function tryInit(){
+    if(layout()){ laidOut = true; draw(); if(progress<1) requestAnimationFrame(loop); }
+  }
+
+  window.addEventListener('resize', function(){ if(layout()) draw(); });
+  tryInit();
+  document.addEventListener('view:numbers-shown', function(){
+    if(!laidOut){ tryInit(); } else { layout(); draw(); }
+  });
+})();
+
+(function(){
+  var buttons = document.querySelectorAll('.toggle button[data-view]');
+  var links = document.querySelectorAll('[data-view-link]');
+
+  function showView(name){
+    document.querySelectorAll('.view').forEach(function(v){
+      v.classList.toggle('active', v.id === 'view-' + name);
+    });
+    buttons.forEach(function(b){
+      var active = b.getAttribute('data-view') === name;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    if(name === 'numbers'){
+      document.dispatchEvent(new Event('view:numbers-shown'));
+    }
+    if(history.replaceState) history.replaceState(null, '', '#' + name);
+  }
+
+  buttons.forEach(function(b){
+    b.addEventListener('click', function(){ showView(b.getAttribute('data-view')); });
+  });
+  links.forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      showView(a.getAttribute('data-view-link'));
+    });
+  });
+
+  var initial = (location.hash || '').replace('#','');
+  if(initial === 'numbers' || initial === 'system'){ showView(initial); }
+})();
+</script>
+
+</body>
+</html>
